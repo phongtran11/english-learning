@@ -1,0 +1,14 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    volumes:
+      - .:/app
+      - /app/tmp # Prevent tmp/ from being synced back to host, or just standard docker volume trick
+    env_file:
+      - .env
+    environment:
+      - GIN_MODE=${SERVER_ENV:-debug}

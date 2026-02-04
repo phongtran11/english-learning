@@ -1,0 +1,11 @@
+server:
+  port: "8080"
+  env: "dev" # dev, prod
+
+database:
+  dsn: "" # Set DATABASE_DSN in .env
+
+jwt:
+  secret: "" # Set JWT_SECRET in .env
+  access_expiry_hour: 24
+  refresh_expiry_hour: 168

@@ -1,0 +1,19 @@
+# Binaries
+/bin
+/dist
+/tmp
+/main
+/server
+
+# Configs
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea
+.vscode
+.DS_Store
+
+# Go
+vendor/
