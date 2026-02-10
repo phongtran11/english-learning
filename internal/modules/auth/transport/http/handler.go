@@ -1,8 +1,8 @@
 package http
 
 import (
-	"english-learning/internal/core/domain"
-	"english-learning/internal/core/services/authservice"
+	authDomain "english-learning/internal/modules/auth/domain"
+	"english-learning/internal/modules/auth/service"
 	"english-learning/pkg/response"
 	"net/http"
 
@@ -10,21 +10,26 @@ import (
 )
 
 type AuthHandler struct {
-	service *authservice.AuthService
+	service *service.Service
 }
 
-func NewAuthHandler(service *authservice.AuthService) *AuthHandler {
+func NewAuthHandler(service *service.Service) *AuthHandler {
 	return &AuthHandler{service: service}
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
-	var req domain.RegisterRequest
+	var req RegisterRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
 		return
 	}
 
-	if err := h.service.Register(&req); err != nil {
+	domainReq := &authDomain.RegisterRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	if err := h.service.Register(domainReq); err != nil {
 		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
 		return
 	}
@@ -33,26 +38,36 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var req domain.LoginRequest
+	var req LoginRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
 		return
 	}
 
+	domainReq := &authDomain.LoginRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
 	userAgent := c.Request.UserAgent()
 	clientIP := c.ClientIP()
 
-	tokenPair, err := h.service.Login(&req, userAgent, clientIP)
+	tokenPair, err := h.service.Login(domainReq, clientIP, userAgent)
 	if err != nil {
-		response.Error(c, http.StatusUnauthorized, response.CodeUnauthorized, err.Error())
+		response.Error(c, http.StatusUnauthorized, response.CodeUnauthorized, "Invalid credentials")
 		return
 	}
 
-	response.Success(c, tokenPair, response.MsgLoginSuccess)
+	resp := TokenPairResponseDTO{
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
+	}
+
+	response.Success(c, resp, response.MsgLoginSuccess)
 }
 
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
-	var req domain.RefreshTokenRequest
+	var req RefreshTokenRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
 		return
@@ -64,11 +79,16 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, tokenPair, response.MsgRefreshTokenSuccess)
+	resp := TokenPairResponseDTO{
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
+	}
+
+	response.Success(c, resp, response.MsgRefreshTokenSuccess)
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	var req domain.RefreshTokenRequest
+	var req RefreshTokenRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
 		return

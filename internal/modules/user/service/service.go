@@ -1,22 +1,21 @@
-package userservice
+package service
 
 import (
-	"english-learning/internal/core/domain"
-	"english-learning/internal/core/ports"
+	"english-learning/internal/modules/user/domain"
 	"errors"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	repo ports.UserRepository
+	repo domain.UserRepository
 }
 
-func NewService(repo ports.UserRepository) *Service {
+func NewService(repo domain.UserRepository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) Create(req *domain.RegisterRequest) error {
+func (s *Service) Create(req *domain.User) error {
 	existing, _ := s.repo.FindByEmail(req.Email)
 	if existing != nil {
 		return errors.New("email already exists")
@@ -27,12 +26,9 @@ func (s *Service) Create(req *domain.RegisterRequest) error {
 		return err
 	}
 
-	user := &domain.User{
-		Email:    req.Email,
-		Password: string(hashedPassword),
-	}
+	req.Password = string(hashedPassword)
 
-	return s.repo.Create(user)
+	return s.repo.Create(req)
 }
 
 func (s *Service) Get(id uint) (*domain.User, error) {

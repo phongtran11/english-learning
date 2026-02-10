@@ -1,8 +1,7 @@
 package http
 
 import (
-	"english-learning/internal/core/domain"
-	"english-learning/internal/core/services/userservice"
+	"english-learning/internal/modules/user/domain"
 	"english-learning/pkg/response"
 	"net/http"
 	"strconv"
@@ -11,21 +10,27 @@ import (
 )
 
 type UserHandler struct {
-	service *userservice.Service
+	service *services.Service
 }
 
-func NewUserHandler(service *userservice.Service) *UserHandler {
+func NewUserHandler(service *services.Service) *UserHandler {
 	return &UserHandler{service: service}
 }
 
 func (h *UserHandler) Create(c *gin.Context) {
-	var req domain.RegisterRequest
+	var req RegisterRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
 		return
 	}
 
-	if err := h.service.Create(&req); err != nil {
+	// Map DTO to Domain
+	domainReq := &domain.User{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	if err := h.service.Create(domainReq); err != nil {
 		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
 		return
 	}
@@ -47,7 +52,7 @@ func (h *UserHandler) Get(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, user, response.MsgSuccess)
+	response.Success(c, ToUserResponse(user), response.MsgSuccess)
 }
 
 func (h *UserHandler) Update(c *gin.Context) {
@@ -58,14 +63,21 @@ func (h *UserHandler) Update(c *gin.Context) {
 		return
 	}
 
-	var user domain.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var req UpdateUserRequestDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
 		return
 	}
-	user.ID = uint(id)
 
-	if err := h.service.Update(&user); err != nil {
+	user := &domain.User{
+		ID:          uint(id),
+		FirstName:   req.FirstName,
+		LastName:    req.LastName,
+		PhoneNumber: req.PhoneNumber,
+		Birthdate:   req.Birthdate,
+	}
+
+	if err := h.service.Update(user); err != nil {
 		response.Error(c, http.StatusInternalServerError, response.CodeServerInternalError, err.Error())
 		return
 	}
@@ -102,5 +114,6 @@ func (h *UserHandler) List(c *gin.Context) {
 		return
 	}
 
-	response.SuccessList(c, users, count, page, pageSize, response.MsgSuccess)
+	resp := ToUserListResponse(users, count, page, pageSize)
+	response.Success(c, resp)
 }

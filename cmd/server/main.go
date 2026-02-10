@@ -2,12 +2,16 @@ package main
 
 import (
 	"english-learning/configs"
-	handlers "english-learning/internal/adapters/handlers/http"
-	"english-learning/internal/adapters/handlers/http/middleware"
-	"english-learning/internal/adapters/repositories/postgres"
-	"english-learning/internal/core/domain"
-	"english-learning/internal/core/services/authservice"
-	"english-learning/internal/core/services/userservice"
+	authHandler "english-learning/internal/modules/auth/transport/http"
+	userHandler "english-learning/internal/modules/user/transport/http"
+	"english-learning/pkg/middleware"
+
+	authService "english-learning/internal/modules/auth/service"
+	userService "english-learning/internal/modules/user/service"
+
+	sessionPostgres "english-learning/internal/modules/session/repository/postgres"
+	userPostgres "english-learning/internal/modules/user/repository/postgres"
+
 	"english-learning/pkg/logger"
 	"english-learning/pkg/validation"
 	"log"
@@ -39,8 +43,6 @@ func main() {
 		_ = v.RegisterValidation("date_format", validation.ValidateDateFormat)
 	}
 
-	logger.Infof("Loading config: %v", cfg)
-
 	// 3. Init Database
 	db, err := gorm.Open(driverpostgres.Open(cfg.Database.DSN), &gorm.Config{})
 	if err != nil {
@@ -48,23 +50,17 @@ func main() {
 		return
 	}
 
-	// Auto Migrate
-	if err := db.AutoMigrate(&domain.User{}, &domain.Session{}); err != nil {
-		logger.Errorf("Failed to migrate database: %v", err)
-		return
-	}
-
 	// 4. Init Repositories
-	userRepo := postgres.NewUserRepository(db)
-	sessionRepo := postgres.NewSessionRepository(db)
+	userRepo := userPostgres.NewUserRepository(db)
+	sessionRepo := sessionPostgres.NewSessionRepository(db)
 
 	// 5. Init Services
-	userService := userservice.NewService(userRepo)
-	authService := authservice.NewAuthService(userRepo, sessionRepo, cfg.JWT)
+	userServiceInstance := userService.NewService(userRepo)
+	authServiceInstance := authService.NewService(userRepo, sessionRepo, cfg.JWT.Secret)
 
 	// 6. Init Handlers
-	userHandler := handlers.NewUserHandler(userService)
-	authHandler := handlers.NewAuthHandler(authService)
+	userH := userHandler.NewUserHandler(userServiceInstance)
+	authH := authHandler.NewAuthHandler(authServiceInstance)
 
 	// 7. Init Router
 	r := gin.Default()
@@ -72,21 +68,21 @@ func main() {
 	// Auth Routes
 	authGroup := r.Group("/auth")
 	{
-		authGroup.POST("/register", authHandler.Register)
-		authGroup.POST("/login", authHandler.Login)
-		authGroup.POST("/refresh", authHandler.RefreshToken)
-		authGroup.POST("/logout", authHandler.Logout)
+		authGroup.POST("/register", authH.Register)
+		authGroup.POST("/login", authH.Login)
+		authGroup.POST("/refresh", authH.RefreshToken)
+		authGroup.POST("/logout", authH.Logout)
 	}
 
 	// User Routes (Protected)
 	userGroup := r.Group("/users")
 	userGroup.Use(middleware.AuthMiddleware(cfg.JWT))
 	{
-		userGroup.POST("", userHandler.Create)
-		userGroup.GET("", userHandler.List)
-		userGroup.GET("/:id", userHandler.Get)
-		userGroup.PUT("/:id", userHandler.Update)
-		userGroup.DELETE("/:id", userHandler.Delete)
+		userGroup.POST("", userH.Create)
+		userGroup.GET("", userH.List)
+		userGroup.GET("/:id", userH.Get)
+		userGroup.PUT("/:id", userH.Update)
+		userGroup.DELETE("/:id", userH.Delete)
 	}
 
 	// 8. Start Server
