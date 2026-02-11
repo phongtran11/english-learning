@@ -29,18 +29,18 @@ func InitLogger(env string) {
 	}
 }
 
-func Infof(template string, args ...interface{}) {
-	Log.Sugar().Infof(template, args...)
+func Infof(name string, template string, args ...interface{}) {
+	Log.Named(name).Sugar().Infof(template, args...)
 }
 
-func Errorf(template string, args ...interface{}) {
-	Log.Sugar().Errorf(template, args...)
+func Errorf(name string, template string, args ...interface{}) {
+	Log.Named(name).Sugar().Errorf(template, args...)
 }
 
-func Debugf(template string, args ...interface{}) {
-	Log.Sugar().Debugf(template, args...)
+func Debugf(name string, template string, args ...interface{}) {
+	Log.Named(name).Sugar().Debugf(template, args...)
 }
 
-func Warnf(template string, args ...interface{}) {
-	Log.Sugar().Warnf(template, args...)
+func Warnf(name string, template string, args ...interface{}) {
+	Log.Named(name).Sugar().Warnf(template, args...)
 }

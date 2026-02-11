@@ -14,7 +14,4 @@ type Session struct {
 	ExpiresAt    time.Time
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
-
-	// Relation (Belongs To)
-	User *User
 }

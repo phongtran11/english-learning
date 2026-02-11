@@ -3,24 +3,27 @@ package http
 import (
 	"english-learning/internal/modules/user/domain"
 	"english-learning/pkg/response"
+	"english-learning/pkg/validation"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
+// UserHandler handles HTTP requests for user operations.
 type UserHandler struct {
-	service *services.Service
+	service domain.UserService
 }
 
-func NewUserHandler(service *services.Service) *UserHandler {
+// NewUserHandler creates a new UserHandler with the given service interface.
+func NewUserHandler(service domain.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
 func (h *UserHandler) Create(c *gin.Context) {
 	var req RegisterRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
+		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, validation.FormatError(err))
 		return
 	}
 
@@ -65,7 +68,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 
 	var req UpdateUserRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
+		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, validation.FormatError(err))
 		return
 	}
 
@@ -114,6 +117,6 @@ func (h *UserHandler) List(c *gin.Context) {
 		return
 	}
 
-	resp := ToUserListResponse(users, count, page, pageSize)
-	response.Success(c, resp)
+	resp := ToUserListResponse(users)
+	response.SuccessList(c, resp, count, page, pageSize, response.MsgSuccess)
 }

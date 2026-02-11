@@ -1,5 +1,9 @@
 package domain
 
+import "errors"
+
+var ErrUserNotFound = errors.New("user not found")
+
 type UserRepository interface {
 	Create(user *User) error
 	FindByEmail(email string) (*User, error)

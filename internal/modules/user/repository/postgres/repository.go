@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"english-learning/internal/modules/user/domain"
+	"errors"
 
 	"gorm.io/gorm"
 )
@@ -27,18 +28,24 @@ func (r *UserRepository) Create(user *domain.User) error {
 }
 
 func (r *UserRepository) FindByEmail(email string) (*domain.User, error) {
-	var userModel UserGorm
+	var userModel User
 	err := r.db.Where("email = ?", email).First(&userModel).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrUserNotFound
+		}
 		return nil, err
 	}
 	return userModel.ToDomain(), nil
 }
 
 func (r *UserRepository) FindByID(id uint) (*domain.User, error) {
-	var userModel UserGorm
+	var userModel User
 	err := r.db.First(&userModel, id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrUserNotFound
+		}
 		return nil, err
 	}
 	return userModel.ToDomain(), nil
@@ -50,14 +57,14 @@ func (r *UserRepository) Update(user *domain.User) error {
 }
 
 func (r *UserRepository) Delete(id uint) error {
-	return r.db.Delete(&UserGorm{}, id).Error
+	return r.db.Delete(&User{}, id).Error
 }
 
 func (r *UserRepository) List(offset, limit int) ([]domain.User, int64, error) {
-	var userModels []UserGorm
+	var userModels []User
 	var count int64
 
-	if err := r.db.Model(&UserGorm{}).Count(&count).Error; err != nil {
+	if err := r.db.Model(&User{}).Count(&count).Error; err != nil {
 		return nil, 0, err
 	}
 

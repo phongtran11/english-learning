@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserGorm struct {
+type User struct {
 	ID          uint           `gorm:"type:bigserial;primaryKey"`
 	Email       string         `gorm:"type:varchar(255);uniqueIndex;not null"`
 	Password    string         `gorm:"type:varchar(255);not null"`
@@ -22,7 +22,7 @@ type UserGorm struct {
 
 }
 
-func (m *UserGorm) ToDomain() *domain.User {
+func (m *User) ToDomain() *domain.User {
     if m == nil {
         return nil
     }
@@ -43,11 +43,11 @@ func (m *UserGorm) ToDomain() *domain.User {
 	}
 }
 
-func FromDomainUser(u *domain.User) *UserGorm {
+func FromDomainUser(u *domain.User) *User {
     if u == nil {
         return nil
     }
-	return &UserGorm{
+	return &User{
 		ID:          u.ID,
 		Email:       u.Email,
 		Password:    u.Password,

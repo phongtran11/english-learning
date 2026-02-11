@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type SessionGorm struct {
+type Session struct {
 	ID           uint      `gorm:"primaryKey"`
 	UserID       uint      `gorm:"not null;index"`
 	RefreshToken string    `gorm:"type:text;not null"`
@@ -18,10 +18,10 @@ type SessionGorm struct {
 	UpdatedAt    time.Time
 
 	// Relation (Belongs To)
-	User *userPostgres.UserGorm `gorm:"constraint:OnDelete:CASCADE;"`
+	User *userPostgres.User `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
-func (m *SessionGorm) ToDomain() *domain.Session {
+func (m *Session) ToDomain() *domain.Session {
     if m == nil {
         return nil
     }
@@ -38,11 +38,11 @@ func (m *SessionGorm) ToDomain() *domain.Session {
 	}
 }
 
-func FromDomainSession(s *domain.Session) *SessionGorm {
+func FromDomainSession(s *domain.Session) *Session {
     if s == nil {
         return nil
     }
-	return &SessionGorm{
+	return &Session{
 		ID:           s.ID,
 		UserID:       s.UserID,
 		RefreshToken: s.RefreshToken,

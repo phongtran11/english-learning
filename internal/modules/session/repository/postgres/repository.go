@@ -26,8 +26,8 @@ func (r *SessionRepository) Create(session *domain.Session) error {
 }
 
 func (r *SessionRepository) FindByID(id uint) (*domain.Session, error) {
-	var sessionModel SessionGorm
-	err := r.db.Preload("User").First(&sessionModel, id).Error
+	var sessionModel Session
+	err := r.db.First(&sessionModel, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -35,8 +35,8 @@ func (r *SessionRepository) FindByID(id uint) (*domain.Session, error) {
 }
 
 func (r *SessionRepository) FindByRefreshToken(refreshToken string) (*domain.Session, error) {
-	var sessionModel SessionGorm
-	err := r.db.Preload("User").Where("refresh_token = ?", refreshToken).First(&sessionModel).Error
+	var sessionModel Session
+	err := r.db.Where("refresh_token = ?", refreshToken).First(&sessionModel).Error
 	if err != nil {
 		return nil, err
 	}
@@ -44,13 +44,13 @@ func (r *SessionRepository) FindByRefreshToken(refreshToken string) (*domain.Ses
 }
 
 func (r *SessionRepository) Revoke(id uint) error {
-	return r.db.Model(&SessionGorm{}).Where("id = ?", id).Update("is_revoked", true).Error
+	return r.db.Model(&Session{}).Where("id = ?", id).Update("is_revoked", true).Error
 }
 
 func (r *SessionRepository) RevokeAllForUser(userID uint) error {
-	return r.db.Model(&SessionGorm{}).Where("user_id = ?", userID).Update("is_revoked", true).Error
+	return r.db.Model(&Session{}).Where("user_id = ?", userID).Update("is_revoked", true).Error
 }
 
 func (r *SessionRepository) Delete(id uint) error {
-	return r.db.Delete(&SessionGorm{}, id).Error
+	return r.db.Delete(&Session{}, id).Error
 }

@@ -2,25 +2,27 @@ package http
 
 import (
 	authDomain "english-learning/internal/modules/auth/domain"
-	"english-learning/internal/modules/auth/service"
 	"english-learning/pkg/response"
+	"english-learning/pkg/validation"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
+// AuthHandler handles HTTP requests for authentication operations.
 type AuthHandler struct {
-	service *service.Service
+	service authDomain.AuthService
 }
 
-func NewAuthHandler(service *service.Service) *AuthHandler {
+// NewAuthHandler creates a new AuthHandler with the given service interface.
+func NewAuthHandler(service authDomain.AuthService) *AuthHandler {
 	return &AuthHandler{service: service}
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
+		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, validation.FormatError(err))
 		return
 	}
 
@@ -40,7 +42,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
+		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, validation.FormatError(err))
 		return
 	}
 
@@ -69,7 +71,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	var req RefreshTokenRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
+		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, validation.FormatError(err))
 		return
 	}
 
@@ -90,7 +92,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 func (h *AuthHandler) Logout(c *gin.Context) {
 	var req RefreshTokenRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, err.Error())
+		response.Error(c, http.StatusBadRequest, response.CodeBadRequest, validation.FormatError(err))
 		return
 	}
 
