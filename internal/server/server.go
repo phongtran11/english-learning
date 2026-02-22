@@ -46,7 +46,7 @@ func New(cfg *configs.Config, db *gorm.DB) *gin.Engine {
 	userH := userHandler.NewUserHandler(userSvc)
 	authH := authHandler.NewAuthHandler(authSvc)
 
-	// Register Routes (delegated to each module)
+	// Register Routes
 	authRoute.Register(r, authH)
 	userRoute.Register(r, cfg, userH)
 
